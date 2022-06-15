@@ -1,9 +1,11 @@
 <template>
   <div class="container">
     <div class="row">
-      <div class="col"> OAT Mobile Control</div>
+      <div class="col">
+        <h2> OAT Mobile Control</h2> 
+      </div>
     </div>
-    <div class="container alert-warning" v-show="!deviceConnected">
+    <div class="alert alert-dark top-buffer" v-show="!deviceConnected">
       <h5>No Device is connected yet please connect one first:</h5>
       <device-selector v-on:device-select-success="initApplication"></device-selector>
     </div>
@@ -16,10 +18,15 @@
       <div class="col">Curent position</div>
     </div>
     <div class="row">
-      <div class="col">RA: 00h 00m 00s</div>
+      <div class="col">RA: {{currentRA}}</div>
     </div>
     <div class="row">
-      <div class="col">DEC: 00° 00m 00s</div>
+      <div class="col">DEC: {{currentDecAngle}}° {{currentDecTimeInMin}}</div>
+    </div>
+    <div class="row">
+      <div class="col">
+           <button class="btn btn-primary" @click="getCurrentRa();">Get RA</button>
+      </div>
     </div>
     <div class="row top-buffer">
       <div class="col">
@@ -49,13 +56,13 @@
     </div>
     <div class="row top-buffer">
       <div class="col d-grid">
-        <button class="btn btn-primary">set home</button>
+        <button class="btn btn-primary" @click="setHome();">Set Home</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary">set target</button>
+        <button class="btn btn-primary" @click="setTarget();">Set Target</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary">stop</button>
+        <button class="btn btn-primary">Stop</button>
       </div>
     </div>
     <div class="row top-buffer">
@@ -68,12 +75,12 @@
     <div class="row top-buffer">
       <div class="col allign-left">
         <div class="form-check form-switch form-check-reverse">
-          <input class="form-check-input" type="checkbox" role="switch" id="trackingSwitch">
-          <label class="form-check-label" for="trackingSwitch">tracking</label>
+          <input class="form-check-input" type="checkbox" role="switch" id="trackingSwitch" @click="activateTracking();">
+          <label class="form-check-label" for="trackingSwitch">Tracking</label>
         </div>
         <div class="form-check form-switch form-check-reverse top-buffer">
           <input class="form-check-input" type="checkbox" role="switch" id="parkSwitch">
-          <label class="form-check-label" for="parkSwitch">park</label>
+          <label class="form-check-label" for="parkSwitch">Park</label>
         </div>
         <div class="form-check form-check-reverse top-buffer">
           <input class="form-check-input" type="checkbox" value="" id="reverseCheck1">
@@ -97,7 +104,12 @@ export default {
   data() {
     return {
       slewRate: 5,
+      currentDecAngle: 0,
+      currentDecTimeInMin: 0,
+      currentRA: Date,
       deviceConnected: false,
+      isHomeSet: false,
+      isTargetSet: false,
       testResult: null
     }
   },
@@ -110,7 +122,41 @@ export default {
     updateSlewRate: function (val) {
       this.slewRate = val.target.value;
     },
+
+    getCurrentDecAngle: function () {
+      this.currentDecAngle = 10;
+      //TODO: API ansprechen
+    },
+
+    getCurrentDecTimeInMin: function () {
+      this.currentDecTimeInMin = 40;
+      //TODO: API ansprechen
+    },
+
+    getCurrentRa: function () {
+      this.currentRA = Date.now();
+      //TODO: API ansprechen
+    },
+
+    activateTracking: function() {
+      var checkbox = document.getElementById("trackingSwitch");
+      if (checkbox.checked == true) {
+        alert("test");
+      }
+    },
+
+    setHome: function() {
+      this.isHomeSet = true;
+      alert("Home is Set");
+    },
+
+    setTarget: function() {
+      this.isTargetSet = true;
+      alert("Target is Set");
+    },
+
     initApplication: function () {
+      this.getCurrentRa();
       this.deviceConnected = true;
       // TODO: Show Success alert and display some telescope infos
       const self = this;
@@ -125,9 +171,8 @@ export default {
 
 <style>
 body {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: Helvetica;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
   background-color: #212a2e;
   color: #F7F8F8;
