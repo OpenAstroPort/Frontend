@@ -5,7 +5,7 @@
         <h2> OAT Mobile Control</h2> 
       </div>
     </div>
-    <div class="alert alert-dark top-buffer" v-show="!deviceConnected">
+    <div class="alert alert-dark top-buffer" v-show="!deviceSelected">
       <h5>No Device is connected yet please connect one first:</h5>
       <device-selector v-on:device-select-success="initApplication"></device-selector>
     </div>
@@ -13,6 +13,12 @@
       <pre>
         {{testResult}}
       </pre>
+    </div>
+    <div class="row top-buffer">
+      <div class="col">
+        <button class="btn btn-primary" v-show="deviceConnected" @click="disconnectDevice">disconnect</button>
+        <button class="btn btn-primary" v-show="!deviceConnected" @click="connectDevice">connect</button>
+      </div>
     </div>
     <div class="row top-buffer">
       <div class="col">Curent position</div>
@@ -108,6 +114,7 @@ export default {
       currentDecTimeInMin: 0,
       currentRA: "",
       deviceConnected: false,
+      deviceSelected: false,
       isHomeSet: false,
       isTargetSet: false,
       testResult: null
@@ -173,15 +180,48 @@ export default {
       alert("Target is Set");
     },
 
-    initApplication: function () {
-      this.getCurrentRa();
-      this.deviceConnected = true;
-      // TODO: Show Success alert and display some telescope infos
+    connectDevice: function () {
       const self = this;
-      axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
-        if(response.data.status === "success")
-          self.testResult = JSON.stringify(response.data.result);
-      })
+      return new Promise(function(resolve, reject) {
+        axios.post(process.env.VUE_APP_ROOT_API + "/devices/action", {"action": "connect"}).then((response) => {
+          if(response.data.status === "success") {
+            self.deviceConnected = true;
+            resolve(response.data);
+          } else {
+            reject(response.data);
+          }
+        }).catch((error) => {
+          reject(error);
+        })
+      });
+    },
+
+    disconnectDevice: function () {
+      const self = this;
+      return new Promise(function(resolve, reject) {
+        axios.post(process.env.VUE_APP_ROOT_API + "/devices/action", {"action": "disconnect"}).then((response) => {
+          if(response.data.status === "success") {
+            self.deviceConnected = false;
+            resolve(response.data);
+          } else {
+            reject(response.data);
+          }
+        }).catch((error) => {
+          reject(error);
+        })
+      });
+    },
+
+    initApplication: function () {
+      this.deviceSelected = true;
+      const self = this;
+      this.connectDevice().then(function () {
+        self.getCurrentRa();
+        axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
+          if(response.data.status === "success")
+            self.testResult = JSON.stringify(response.data.result);
+        });
+      });
     }
   }
 }
