@@ -30,7 +30,7 @@
     </div>
     <div class="row top-buffer">
       <div class="col">
-        <button type="button" class="btn btn-primary btn-xl">
+        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('n')" @mouseup="stopMoveDirection('n')">
           <i class="bi bi-caret-up"></i>
         </button>
       </div>
@@ -106,7 +106,7 @@ export default {
       slewRate: 5,
       currentDecAngle: 0,
       currentDecTimeInMin: 0,
-      currentRA: Date,
+      currentRA: "",
       deviceConnected: false,
       isHomeSet: false,
       isTargetSet: false,
@@ -136,6 +136,24 @@ export default {
     getCurrentRa: function () {
       this.currentRA = Date.now();
       //TODO: API ansprechen
+    },
+
+    startMoveDirection: function (direction) {
+      // const self = this;
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/move", {direction: direction}).then((response) => {
+        // if(response.data.status === "success")
+        //   self.isMoving = true;
+        console.log(response);
+      })
+    },
+
+    stopMoveDirection: function (direction) {
+      // const self = this;
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/move/quit", {direction: direction}).then((response) => {
+        // if(response.data.status === "success")
+        //   self.isMoving = false;
+        console.log(response);
+      })
     },
 
     activateTracking: function() {
