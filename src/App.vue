@@ -23,16 +23,11 @@
     <div class="row top-buffer">
       <div class="col">Curent position</div>
     </div>
-    <div class="row">
+    <div class="row top-buffer-small">
       <div class="col">RA: {{currentRA}}</div>
     </div>
     <div class="row">
       <div class="col">DEC: {{currentDecAngle}}° {{currentDecTimeInMin}}</div>
-    </div>
-    <div class="row">
-      <div class="col">
-           <button class="btn btn-primary" @click="getCurrentRa();">Get RA</button>
-      </div>
     </div>
     <div class="row top-buffer">
       <div class="col">
@@ -43,19 +38,19 @@
     </div>
     <div class="row top-buffer gx-5">
       <div class="col right-buffer d-flex justify-content-end">
-        <button type="button" class="btn btn-primary btn-xl">
+        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('w')" @mouseup="stopMoveDirection('w')">
           <i class="bi bi-caret-left"></i>
         </button>
       </div>
       <div class="col left-buffer d-flex justify-content-start">
-        <button type="button" class="btn btn-primary btn-xl">
+        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('o')" @mouseup="stopMoveDirection('o')">
           <i class="bi bi-caret-right"></i>
         </button>
       </div>
     </div>
     <div class="row top-buffer">
       <div class="col">
-        <button type="button" class="btn btn-primary btn-xl">
+        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('s')" @mouseup="stopMoveDirection('s')">
           <i class="bi bi-caret-down"></i>
         </button>
       </div>
@@ -68,31 +63,25 @@
         <button class="btn btn-primary" @click="setTarget();">Set Target</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary">Stop</button>
+        <button class="btn btn-primary" @click="stopMoveAllDirection();">Stop</button>
       </div>
     </div>
     <div class="row top-buffer">
       <div class="col allign-left">
         <label for="slewRate" class="form-label">Slew Rate: </label>
         <span id="showSlewRate">{{ slewRate }}</span>
-        <input type="range" class="form-range" min="1" max="5" id="slewRate" @change="updateSlewRate($event)">
+        <input type="range" class="form-range" min="1" max="4" id="slewRate" @change="updateSlewRate($event)">
       </div>
     </div>
     <div class="row top-buffer">
       <div class="col allign-left">
         <div class="form-check form-switch form-check-reverse">
-          <input class="form-check-input" type="checkbox" role="switch" id="trackingSwitch" @click="activateTracking();">
-          <label class="form-check-label" for="trackingSwitch">Tracking</label>
+          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateSwitchToggle('toggleTracking');">
+          <label class="form-check-label" for="toggleTracking">Tracking</label>
         </div>
         <div class="form-check form-switch form-check-reverse top-buffer">
-          <input class="form-check-input" type="checkbox" role="switch" id="parkSwitch">
-          <label class="form-check-label" for="parkSwitch">Park</label>
-        </div>
-        <div class="form-check form-check-reverse top-buffer">
-          <input class="form-check-input" type="checkbox" value="" id="reverseCheck1">
-          <label class="form-check-label" for="reverseCheck1">
-            Reverse checkbox
-          </label>
+          <input class="form-check-input" type="checkbox" role="switch" id="toggleParking" @click="activateSwitchToggle('toggleParking');">
+          <label class="form-check-label" for="toggleParking">Park</label>
         </div>
       </div>
     </div>
@@ -109,9 +98,9 @@ export default {
   name: 'App',
   data() {
     return {
-      slewRate: 5,
-      currentDecAngle: 0,
-      currentDecTimeInMin: 0,
+      slewRate: 4,
+      currentDecAngle: "",
+      currentDecTimeInMin: "",
       currentRA: "",
       deviceConnected: false,
       deviceSelected: false,
@@ -126,23 +115,39 @@ export default {
   },
 
   methods: {
-    updateSlewRate: function (val) {
-      this.slewRate = val.target.value;
+  
+    updateSlewRate: function (slewRate) {
+      this.slewRate = slewRate.target.value;
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/slew/rate", {speed: this.slewRate}).then((response) => {
+        if(response.data.status === "success") {
+          console.log(response);
+        }
+      })
     },
 
-    getCurrentDecAngle: function () {
-      this.currentDecAngle = 10;
-      //TODO: API ansprechen
-    },
-
-    getCurrentDecTimeInMin: function () {
-      this.currentDecTimeInMin = 40;
-      //TODO: API ansprechen
+    getCurrentDecAngleAndTime: function () {
+      axios.get(process.env.VUE_APP_ROOT_API + "/telescope/position").then((response) => {
+        if(response.data.status === "success") {
+          this.currentDecTimeInMin = response.data.result[1];
+          this.currentDecAngle = response.data.result[0];
+        }
+      })
     },
 
     getCurrentRa: function () {
-      this.currentRA = Date.now();
-      //TODO: API ansprechen
+      axios.get(process.env.VUE_APP_ROOT_API + "/telescope/datetime").then((response) => {
+          if(response.data.status === "success") {
+            this.currentRA = response.data.result[1];
+        }
+      })
+    },
+
+    stopMoveAllDirection: function() {
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/move/quit", {direction: "a"}).then((response) => {
+        if(response.data.status === "success") {
+          console.log(response);
+        }
+      })
     },
 
     startMoveDirection: function (direction) {
@@ -163,21 +168,33 @@ export default {
       })
     },
 
-    activateTracking: function() {
-      var checkbox = document.getElementById("trackingSwitch");
-      if (checkbox.checked == true) {
-        alert("test");
+    activateSwitchToggle: function(wichSwitch) {
+      var checkbox = document.getElementById(wichSwitch);
+      if (checkbox.checked === true) {
+        axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: wichSwitch}).then((response) => {
+          if(response.data.status === "success"){
+            console.log(response);
+          }
+        })
       }
     },
 
     setHome: function() {
-      this.isHomeSet = true;
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: "setHome"}).then((response) => {
+          if(response.data.status === "success"){
+            console.log(response);
+          }
+        })
       alert("Home is Set");
     },
 
     setTarget: function() {
       this.isTargetSet = true;
-      alert("Target is Set");
+      axios.post(process.env.VUE_APP_ROOT_API + "/target/position", {declination: this.currentDecAngle, rightAscension: this.currentDecTimeInMin}).then((response) => {
+        if(response.data.status === "success"){
+          console.log(response.result);
+        }
+      })
     },
 
     connectDevice: function () {
@@ -234,7 +251,8 @@ body {
   text-align: center;
   background-color: #212a2e;
   color: #F7F8F8;
-  margin-top: 10px;
+  margin-top: 1rem;
+  margin-bottom:  2rem;
 }
 
 .checkbox-xl {
@@ -253,6 +271,10 @@ body {
 
 .top-buffer {
   margin-top: 1.5rem;
+}
+
+.top-buffer-small {
+  margin-top: 0.5rem;
 }
 
 .left-buffer {
