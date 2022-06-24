@@ -60,10 +60,46 @@
         <button class="btn btn-primary" @click="setHome();">Set Home</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary" @click="setTarget();">Set Target</button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#setTarget">Slew to Target</button>
+        <div class="modal fade" id="setTarget" tabindex="-1" aria-labelledby="setTargetLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="setTargetLabel">Set Target</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                  <label for="inputRA1">RA: </label>
+                  <div class="col"><input id="inputRA1" class="form-control" type="text" placeholder="00h" aria-label="default input example"></div>
+                  <div class="col"><input id="inputRA2" class="form-control" type="text" placeholder="00m" aria-label="default input example"></div>
+                  <div class="col"><input id="inputRA3" class="form-control" type="text" placeholder="00s" aria-label="default input example"></div>
+                </div>
+                <div class="row top-buffer">
+                  <label for="inputDEC1">DEC: </label>
+                  <div class="col"><input id="inputDEC1" class="form-control" type="text" placeholder="00°" aria-label="default input example"></div>
+                  <div class="col"><input id="inputDEC2" class="form-control" type="text" placeholder="00m" aria-label="default input example"></div>
+                  <div class="col"><input id="inputDEC3" class="form-control" type="text" placeholder="00s" aria-label="default input example"></div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" @click="setTarget();">LET IT SLEW!</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="col d-grid">
         <button class="btn btn-primary" @click="stopMoveAllDirection();">Stop</button>
+      </div>
+    </div>
+    <div class="row top-buffer">
+      <div class="col d-grid">
+        <button class="btn btn-primary" @click="slewTo('home');">Home</button>
+      </div>
+      <div class="col d-grid">
+        <button class="btn btn-primary" id="toggleParking" @click="activateSwitchToggle('toggleParking');">Park</button>
       </div>
     </div>
     <div class="row top-buffer">
@@ -79,20 +115,20 @@
           <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateSwitchToggle('toggleTracking');">
           <label class="form-check-label" for="toggleTracking">Tracking</label>
         </div>
-        <div class="form-check form-switch form-check-reverse top-buffer">
-          <input class="form-check-input" type="checkbox" role="switch" id="toggleParking" @click="activateSwitchToggle('toggleParking');">
-          <label class="form-check-label" for="toggleParking">Park</label>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import DeviceSelector from "@/components/DeviceSelector";
+import $ from "../node_modules/jquery";
 
 const axios = require("axios");
 
-import DeviceSelector from "@/components/DeviceSelector";
+$(".modal").on("hidden.bs.modal", function(){
+    $(".modal-body1").html("");
+});
 
 export default {
   name: 'App',
@@ -115,7 +151,15 @@ export default {
   },
 
   methods: {
-  
+
+    slewTo: function (target) {
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/slew", {to: target}).then((response) => {
+        if(response.data.status === "success") {
+          console.log(response);
+        }
+      })
+    },
+
     updateSlewRate: function (slewRate) {
       this.slewRate = slewRate.target.value;
       axios.post(process.env.VUE_APP_ROOT_API + "/telescope/slew/rate", {speed: this.slewRate}).then((response) => {
@@ -170,7 +214,7 @@ export default {
 
     activateSwitchToggle: function(wichSwitch) {
       var checkbox = document.getElementById(wichSwitch);
-      if (checkbox.checked === true) {
+      if (checkbox.checked === true || wichSwitch === "toggleParking") {
         axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: wichSwitch}).then((response) => {
           if(response.data.status === "success"){
             console.log(response);
@@ -190,11 +234,16 @@ export default {
 
     setTarget: function() {
       this.isTargetSet = true;
-      axios.post(process.env.VUE_APP_ROOT_API + "/target/position", {declination: this.currentDecAngle, rightAscension: this.currentDecTimeInMin}).then((response) => {
+      const targetRA = document.getElementById("inputRA1").value + ':' + document.getElementById("inputRA2").value + ':' + document.getElementById("inputRA3").value;
+      const targetDEC = document.getElementById("inputDEC1").value + '*' + document.getElementById("inputDEC2").value + '\'' + document.getElementById("inputDEC3").value;
+              // eslint-disable-next-line
+        debugger;
+      axios.post(process.env.VUE_APP_ROOT_API + "/target/position", {declination: targetDEC, rightAscension: targetRA}).then((response) => {
         if(response.data.status === "success"){
           console.log(response.result);
         }
       })
+      this.slewTo("target");
     },
 
     connectDevice: function () {
@@ -253,6 +302,10 @@ body {
   color: #F7F8F8;
   margin-top: 1rem;
   margin-bottom:  2rem;
+}
+
+.modal-content {
+  background-color: #212a2e;
 }
 
 .checkbox-xl {
