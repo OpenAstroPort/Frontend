@@ -43,7 +43,7 @@
         </button>
       </div>
       <div class="col left-buffer d-flex justify-content-start">
-        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('o')" @mouseup="stopMoveDirection('o')">
+        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('e')" @mouseup="stopMoveDirection('e')">
           <i class="bi bi-caret-right"></i>
         </button>
       </div>
