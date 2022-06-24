@@ -162,7 +162,7 @@ export default {
 
     updateSlewRate: function (slewRate) {
       this.slewRate = slewRate.target.value;
-      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/slew/rate", {speed: this.slewRate}).then((response) => {
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/slew/speed", {speed: this.slewRate}).then((response) => {
         if(response.data.status === "success") {
           console.log(response);
         }
@@ -172,8 +172,8 @@ export default {
     getCurrentDecAngleAndTime: function () {
       axios.get(process.env.VUE_APP_ROOT_API + "/telescope/position").then((response) => {
         if(response.data.status === "success") {
-          this.currentDecTimeInMin = response.data.result[1];
-          this.currentDecAngle = response.data.result[0];
+          this.currentDecTimeInMin = response.data.result.rightAscension;
+          this.currentDecAngle = response.data.result.declination;
         }
       })
     },
@@ -181,7 +181,7 @@ export default {
     getCurrentRa: function () {
       axios.get(process.env.VUE_APP_ROOT_API + "/telescope/datetime").then((response) => {
           if(response.data.status === "success") {
-            this.currentRA = response.data.result[1];
+            this.currentRA = response.data.result.currentTime;
         }
       })
     },
