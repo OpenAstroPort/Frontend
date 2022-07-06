@@ -31,19 +31,19 @@
     </div>
     <div class="row top-buffer">
       <div class="col">
-        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('n')" @mouseup="stopMoveDirection('n')">
+        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('n')" @touchend="stopMoveDirection('n')" @mousedown="startMoveDirection('n')" @mouseup="stopMoveDirection('n')">
           <i class="bi bi-caret-up"></i>
         </button>
       </div>
     </div>
     <div class="row top-buffer gx-5">
       <div class="col right-buffer d-flex justify-content-end">
-        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('w')" @mouseup="stopMoveDirection('w')">
+        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('n')" @touchend="stopMoveDirection('n')" @mousedown="startMoveDirection('w')" @mouseup="stopMoveDirection('w')">
           <i class="bi bi-caret-left"></i>
         </button>
       </div>
       <div class="col left-buffer d-flex justify-content-start">
-        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('e')" @mouseup="stopMoveDirection('e')">
+        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('n')" @touchend="stopMoveDirection('n')" @mousedown="startMoveDirection('e')" @mouseup="stopMoveDirection('e')">
           <i class="bi bi-caret-right"></i>
         </button>
       </div>
@@ -77,7 +77,7 @@
                 </div>
                 <div class="row top-buffer">
                   <label for="inputDEC1">DEC: </label>
-                  <div class="col"><input id="inputDEC1" class="form-control" type="text" placeholder="00°" aria-label="default input example"></div>
+                  <div class="col"><input id="inputDEC1" class="form-control" type="text" placeholder="+/-00°" aria-label="default input example"></div>
                   <div class="col"><input id="inputDEC2" class="form-control" type="text" placeholder="00m" aria-label="default input example"></div>
                   <div class="col"><input id="inputDEC3" class="form-control" type="text" placeholder="00s" aria-label="default input example"></div>
                 </div>
@@ -169,6 +169,10 @@ export default {
       })
     },
 
+    created: function() {
+      this.interval = setInterval(() => this.getCurrentDecAngleAndTime(), 1000);
+    },
+
     getCurrentDecAngleAndTime: function () {
       axios.get(process.env.VUE_APP_ROOT_API + "/telescope/position").then((response) => {
         if(response.data.status === "success") {
@@ -176,12 +180,9 @@ export default {
           this.currentDecAngle = response.data.result.declination;
         }
       })
-    },
-
-    getCurrentRa: function () {
       axios.get(process.env.VUE_APP_ROOT_API + "/telescope/datetime").then((response) => {
-          if(response.data.status === "success") {
-            this.currentRA = response.data.result.currentTime;
+        if(response.data.status === "success") {
+          this.currentRA = response.data.result.currentTime;
         }
       })
     },
@@ -196,6 +197,7 @@ export default {
 
     startMoveDirection: function (direction) {
       // const self = this;
+      event.preventDefault();
       axios.post(process.env.VUE_APP_ROOT_API + "/telescope/move", {direction: direction}).then((response) => {
         // if(response.data.status === "success")
         //   self.isMoving = true;
@@ -221,6 +223,13 @@ export default {
           }
         })
       }
+      else if (checkbox.checked === false) {
+        axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: wichSwitch}).then((response) => {
+          if(response.data.status === "success"){
+            console.log(response);
+          }
+        })
+      }
     },
 
     setHome: function() {
@@ -229,15 +238,12 @@ export default {
             console.log(response);
           }
         })
-      alert("Home is Set");
     },
 
     setTarget: function() {
       this.isTargetSet = true;
       const targetRA = document.getElementById("inputRA1").value + ':' + document.getElementById("inputRA2").value + ':' + document.getElementById("inputRA3").value;
       const targetDEC = document.getElementById("inputDEC1").value + '*' + document.getElementById("inputDEC2").value + '\'' + document.getElementById("inputDEC3").value;
-              // eslint-disable-next-line
-        debugger;
       axios.post(process.env.VUE_APP_ROOT_API + "/target/position", {declination: targetDEC, rightAscension: targetRA}).then((response) => {
         if(response.data.status === "success"){
           console.log(response.result);
@@ -282,10 +288,10 @@ export default {
       this.deviceSelected = true;
       const self = this;
       this.connectDevice().then(function () {
-        self.getCurrentRa();
         axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
           if(response.data.status === "success")
             self.testResult = JSON.stringify(response.data.result);
+            this.getCurrentDecAngleAndTime();
         });
       });
     }
