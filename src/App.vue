@@ -24,10 +24,10 @@
       <div class="col">Curent position</div>
     </div>
     <div class="row top-buffer-small">
-      <div class="col">RA: {{currentRA}}</div>
+      <div class="col">RA: {{currentDecAngle}}</div>
     </div>
     <div class="row">
-      <div class="col">DEC: {{currentDecAngle}}° {{currentDecTimeInMin}}</div>
+      <div class="col">DEC: {{currentDecTimeInMin}}</div>
     </div>
     <div class="row top-buffer">
       <div class="col">
