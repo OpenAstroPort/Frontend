@@ -253,6 +253,12 @@ export default {
 
     connectDevice: function () {
       const self = this;
+      this.autoRunnerLocation(this.autorunner);
+      axios.get(process.env.VUE_APP_ROOT_API + "/telescope/status").then((response) => {
+          this.isSlewing = response.data.result.isSlewing;
+          this.isTracking = response.data.result.isTracking;
+          document.getElementById("toggleTracking").checked = this.isTracking;
+      });
       return new Promise(function(resolve, reject) {
         axios.post(process.env.VUE_APP_ROOT_API + "/devices/action", {"action": "connect"}).then((response) => {
           if(response.data.status === "success") {
@@ -286,18 +292,12 @@ export default {
 
     initApplication: function () {
       this.deviceSelected = true;
-      this.autoRunnerLocation(this.autorunner);
       const self = this;
       this.connectDevice().then(function () {
         axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
           if(response.data.status === "success")
             self.testResult = JSON.stringify(response.data.result);
             this.getCurrentDecAndRA();
-        });
-        axios.get(process.env.VUE_APP_ROOT_API + "/telescope/status").then((response) => {
-          this.isSlewing = response.data.result.isSlewing;
-          this.isTracking = response.data.result.isTracking;
-          document.getElementById("toggleTracking").checked = this.isTracking;
         });
       });
     }
