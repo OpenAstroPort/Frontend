@@ -99,7 +99,7 @@
         <button class="btn btn-primary" @click="slewTo('home');">Home</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary" id="toggleParking" @click="setParking('toggleParking');">Park</button>
+        <button class="btn btn-primary" id="toggleParking" @click="setParking('setParking');">Park</button>
       </div>
     </div>
     <div class="row top-buffer">
@@ -112,7 +112,7 @@
     <div class="row top-buffer">
       <div class="col allign-left">
         <div class="form-check form-switch form-check-reverse">
-          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="setTracking('toggleTracking');" checked>
+          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="setTracking('setTracking');" checked>
           <label class="form-check-label" for="toggleTracking">Tracking</label>
         </div>
       </div>
