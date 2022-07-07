@@ -269,6 +269,7 @@ export default {
 
     disconnectDevice: function () {
       const self = this;
+      clearInterval(this.autorunner);
       return new Promise(function(resolve, reject) {
         axios.post(process.env.VUE_APP_ROOT_API + "/devices/action", {"action": "disconnect"}).then((response) => {
           if(response.data.status === "success") {
@@ -285,6 +286,7 @@ export default {
 
     initApplication: function () {
       this.deviceSelected = true;
+      this.autoRunnerLocation(this.autorunner);
       const self = this;
       this.connectDevice().then(function () {
         axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
@@ -299,14 +301,6 @@ export default {
         });
       });
     }
-  },
-
-  mounted () {
-    this.autoRunnerLocation(this.autorunner);
-  },
-
-  beforeUnmount() {
-    clearInterval(this.autorunner);
   }
 }
 </script>
