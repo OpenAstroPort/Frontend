@@ -24,10 +24,10 @@
       <div class="col">Curent position</div>
     </div>
     <div class="row top-buffer-small">
-      <div class="col">RA: {{currentDecAngle}}</div>
+      <div class="col">RA: {{currentRightAscension}}</div>
     </div>
     <div class="row">
-      <div class="col">DEC: {{currentDecTimeInMin}}</div>
+      <div class="col">DEC: {{currentDeclination}}</div>
     </div>
     <div class="row top-buffer">
       <div class="col">
@@ -38,19 +38,19 @@
     </div>
     <div class="row top-buffer gx-5">
       <div class="col right-buffer d-flex justify-content-end">
-        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('n')" @touchend="stopMoveDirection('n')" @mousedown="startMoveDirection('w')" @mouseup="stopMoveDirection('w')">
+        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('w')" @touchend="stopMoveDirection('w')" @mousedown="startMoveDirection('w')" @mouseup="stopMoveDirection('w')">
           <i class="bi bi-caret-left"></i>
         </button>
       </div>
       <div class="col left-buffer d-flex justify-content-start">
-        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('n')" @touchend="stopMoveDirection('n')" @mousedown="startMoveDirection('e')" @mouseup="stopMoveDirection('e')">
+        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('e')" @touchend="stopMoveDirection('e')" @mousedown="startMoveDirection('e')" @mouseup="stopMoveDirection('e')">
           <i class="bi bi-caret-right"></i>
         </button>
       </div>
     </div>
     <div class="row top-buffer">
       <div class="col">
-        <button type="button" class="btn btn-primary btn-xl" @mousedown="startMoveDirection('s')" @mouseup="stopMoveDirection('s')">
+        <button type="button" class="btn btn-primary btn-xl" @touchstart="startMoveDirection('s')" @touchend="stopMoveDirection('s')" @mousedown="startMoveDirection('s')" @mouseup="stopMoveDirection('s')">
           <i class="bi bi-caret-down"></i>
         </button>
       </div>
@@ -99,7 +99,7 @@
         <button class="btn btn-primary" @click="slewTo('home');">Home</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary" id="toggleParking" @click="activateSwitchToggle('toggleParking');">Park</button>
+        <button class="btn btn-primary" id="toggleParking" @click="toggleParking('toggleParking');">Park</button>
       </div>
     </div>
     <div class="row top-buffer">
@@ -112,7 +112,7 @@
     <div class="row top-buffer">
       <div class="col allign-left">
         <div class="form-check form-switch form-check-reverse">
-          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateSwitchToggle('toggleTracking');">
+          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateTracking('toggleTracking');">
           <label class="form-check-label" for="toggleTracking">Tracking</label>
         </div>
       </div>
@@ -130,19 +130,21 @@ $(".modal").on("hidden.bs.modal", function(){
     $(".modal-body1").html("");
 });
 
+
 export default {
   name: 'App',
   data() {
     return {
       slewRate: 4,
-      currentDecAngle: "",
-      currentDecTimeInMin: "",
-      currentRA: "",
+      currentDeclination: "",
+      currentRightAscension: "",
       deviceConnected: false,
       deviceSelected: false,
       isHomeSet: false,
       isTargetSet: false,
-      testResult: null
+      testResult: null,
+      isSlewing: false,
+      isTracking: false
     }
   },
 
@@ -151,6 +153,10 @@ export default {
   },
 
   methods: {
+
+    autoRunnerLocation: function () {
+      this.autorunner = setInterval(this.getCurrentDecAndRA, 2000);
+    },
 
     slewTo: function (target) {
       axios.post(process.env.VUE_APP_ROOT_API + "/telescope/slew", {to: target}).then((response) => {
@@ -169,20 +175,11 @@ export default {
       })
     },
 
-    created: function() {
-      this.interval = setInterval(() => this.getCurrentDecAngleAndTime(), 1000);
-    },
-
-    getCurrentDecAngleAndTime: function () {
+    getCurrentDecAndRA: function () {
       axios.get(process.env.VUE_APP_ROOT_API + "/telescope/position").then((response) => {
         if(response.data.status === "success") {
-          this.currentDecTimeInMin = response.data.result.rightAscension;
-          this.currentDecAngle = response.data.result.declination;
-        }
-      })
-      axios.get(process.env.VUE_APP_ROOT_API + "/telescope/datetime").then((response) => {
-        if(response.data.status === "success") {
-          this.currentRA = response.data.result.currentTime;
+          this.currentRightAscension = response.data.result.rightAscension;
+          this.currentDeclination = response.data.result.declination;
         }
       })
     },
@@ -214,22 +211,24 @@ export default {
       })
     },
 
-    activateSwitchToggle: function(wichSwitch) {
-      var checkbox = document.getElementById(wichSwitch);
-      if (checkbox.checked === true || wichSwitch === "toggleParking") {
-        axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: wichSwitch}).then((response) => {
+    activateTracking: function(tracking) {
+      if (document.getElementById(tracking).checked === true) {
+        axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: tracking}).then((response) => {
           if(response.data.status === "success"){
             console.log(response);
           }
         })
       }
-      else if (checkbox.checked === false) {
-        axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: wichSwitch}).then((response) => {
-          if(response.data.status === "success"){
-            console.log(response);
-          }
-        })
-      }
+
+    },
+
+    toggleParking: function(parking) {
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: parking}).then((response) => {
+        if(response.data.status === "success"){
+          console.log(response);
+        }
+      })
+      document.getElementById("toggleTracking").checked = false;
     },
 
     setHome: function() {
@@ -291,10 +290,23 @@ export default {
         axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
           if(response.data.status === "success")
             self.testResult = JSON.stringify(response.data.result);
-            this.getCurrentDecAngleAndTime();
+            this.getCurrentDecAndRA();
         });
+        axios.get(process.env.VUE_APP_ROOT_API+ "/telescope/status").then((response) => {
+          this.isSlewing = response.data.result.isSlewing;
+          this.isTracking = response.data.result.isTracking;
+          document.getElementById("toggleTracking").checked = this.isTracking;
+        })
       });
     }
+  },
+
+  mounted () {
+    this.autoRunnerLocation(this.autorunner);
+  },
+
+  beforeUnmount() {
+    clearInterval(this.autorunner);
   }
 }
 </script>
