@@ -99,7 +99,7 @@
         <button class="btn btn-primary" @click="slewTo('home');">Home</button>
       </div>
       <div class="col d-grid">
-        <button class="btn btn-primary" id="toggleParking" @click="toggleParking('toggleParking');">Park</button>
+        <button class="btn btn-primary" id="toggleParking" @click="setParking('toggleParking');">Park</button>
       </div>
     </div>
     <div class="row top-buffer">
@@ -112,7 +112,7 @@
     <div class="row top-buffer">
       <div class="col allign-left">
         <div class="form-check form-switch form-check-reverse">
-          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateTracking('toggleTracking');" checked>
+          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="setTracking('toggleTracking');" checked>
           <label class="form-check-label" for="toggleTracking">Tracking</label>
         </div>
       </div>
@@ -155,8 +155,7 @@ export default {
   methods: {
 
     autoRunnerLocation: function () {
-      //this.autorunner = setInterval(this.getCurrentDecAndRA, 2000);
-      this.getCurrentDecAndRA();
+      this.autorunner = setInterval(this.getCurrentDecAndRA, 2000);
     },
 
     slewTo: function (target) {
@@ -212,15 +211,15 @@ export default {
       })
     },
 
-    activateTracking: function(tracking) {
-      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: tracking}).then((response) => {
+    setTracking: function(tracking) {
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: tracking, value: document.getElementById(tracking).checked}).then((response) => {
         if(response.data.status === "success"){
           console.log(response);
         }
       })   
     },
 
-    toggleParking: function(parking) {
+    setParking: function(parking) {
       axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: parking}).then((response) => {
         if(response.data.status === "success"){
           console.log(response);
