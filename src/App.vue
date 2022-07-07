@@ -253,12 +253,7 @@ export default {
 
     connectDevice: function () {
       const self = this;
-      this.autoRunnerLocation(this.autorunner);
-      axios.get(process.env.VUE_APP_ROOT_API + "/telescope/status").then((response) => {
-          this.isSlewing = response.data.result.isSlewing;
-          this.isTracking = response.data.result.isTracking;
-          document.getElementById("toggleTracking").checked = this.isTracking;
-      });
+      this.autoRunnerLocation(this.autorunner);      
       return new Promise(function(resolve, reject) {
         axios.post(process.env.VUE_APP_ROOT_API + "/devices/action", {"action": "connect"}).then((response) => {
           if(response.data.status === "success") {
@@ -269,6 +264,13 @@ export default {
           }
         }).catch((error) => {
           reject(error);
+        }).then (() => {
+          axios.get(process.env.VUE_APP_ROOT_API + "/telescope/status").then((response) => {
+            this.isSlewing = response.data.result.isSlewing;
+            this.isTracking = response.data.result.isTracking;
+            document.getElementById("toggleTracking").checked = this.isTracking;
+            this.getCurrentDecAndRA();
+          });
         })
       });
     },
@@ -295,10 +297,14 @@ export default {
       const self = this;
       this.connectDevice().then(function () {
         axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
-          if(response.data.status === "success")
-            self.testResult = JSON.stringify(response.data.result);
-            this.getCurrentDecAndRA();
-        });
+          if (response.data.status === "success") {
+            self.testResult = "Verbunden";
+          }
+          else 
+          {
+            self.testResult = "Nicht Verbunden";
+          }
+        })
       });
     }
   }
