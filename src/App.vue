@@ -112,7 +112,7 @@
     <div class="row top-buffer">
       <div class="col allign-left">
         <div class="form-check form-switch form-check-reverse">
-          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateTracking('toggleTracking');">
+          <input class="form-check-input" type="checkbox" role="switch" id="toggleTracking" @click="activateTracking('toggleTracking');" checked>
           <label class="form-check-label" for="toggleTracking">Tracking</label>
         </div>
       </div>
@@ -212,14 +212,11 @@ export default {
     },
 
     activateTracking: function(tracking) {
-      if (document.getElementById(tracking).checked === true) {
-        axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: tracking}).then((response) => {
-          if(response.data.status === "success"){
-            console.log(response);
-          }
-        })
-      }
-
+      axios.post(process.env.VUE_APP_ROOT_API + "/telescope/action", {action: tracking}).then((response) => {
+        if(response.data.status === "success"){
+          console.log(response);
+        }
+      })   
     },
 
     toggleParking: function(parking) {
