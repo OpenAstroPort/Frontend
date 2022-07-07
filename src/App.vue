@@ -292,11 +292,11 @@ export default {
             self.testResult = JSON.stringify(response.data.result);
             this.getCurrentDecAndRA();
         });
-        axios.get(process.env.VUE_APP_ROOT_API+ "/telescope/status").then((response) => {
+        axios.get(process.env.VUE_APP_ROOT_API + "/telescope/status").then((response) => {
           this.isSlewing = response.data.result.isSlewing;
           this.isTracking = response.data.result.isTracking;
           document.getElementById("toggleTracking").checked = this.isTracking;
-        })
+        });
       });
     }
   },
