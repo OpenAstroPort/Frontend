@@ -155,7 +155,8 @@ export default {
   methods: {
 
     autoRunnerLocation: function () {
-      this.autorunner = setInterval(this.getCurrentDecAndRA, 2000);
+      //this.autorunner = setInterval(this.getCurrentDecAndRA, 2000);
+      this.getCurrentDecAndRA();
     },
 
     slewTo: function (target) {
