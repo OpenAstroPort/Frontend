@@ -294,18 +294,7 @@ export default {
 
     initApplication: function () {
       this.deviceSelected = true;
-      const self = this;
-      this.connectDevice().then(function () {
-        axios.get(process.env.VUE_APP_ROOT_API + "/telescope/info").then((response) => {
-          if (response.data.status === "success") {
-            self.testResult = "Verbunden";
-          }
-          else 
-          {
-            self.testResult = "Nicht Verbunden";
-          }
-        })
-      });
+      this.connectDevice();
     }
   }
 }
